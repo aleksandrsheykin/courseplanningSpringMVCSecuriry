@@ -11,15 +11,5 @@
         <beans:property name="suffix" value=".jsp"></beans:property>
     </beans:bean>
 
-<!--    <beans:bean id="userService" class="main.services.UserServiceImpl">
-        <beans:property name="userDao" ref="userDao"/>
-    </beans:bean>
-    <beans:bean id="userDao" class="main.models.dao.UserDaoImpl"/>
-
-    <beans:bean id="planService" class="main.services.PlanServiceImpl">
-        <beans:property name="planDao" ref="planDao"/>
-    </beans:bean>
-    <beans:bean id="planDao" class="main.models.dao.PlanDaoImpl"/>-->
-
 
 </beans:beans>

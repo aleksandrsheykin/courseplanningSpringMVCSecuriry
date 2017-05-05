@@ -20,10 +20,6 @@ import java.util.List;
 @Repository
 public class ProductDaoImpl implements ProductDao {
 
-    static {
-        PropertyConfigurator.configure("log4j.properties");
-        //PropertyConfigurator.configure(NewAppStartListener.class.getClassLoader().getResource("log4j.xml"));
-    }
     private static Logger logger = Logger.getLogger(ProductDaoImpl.class);
 
 

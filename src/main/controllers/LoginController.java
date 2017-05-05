@@ -48,7 +48,7 @@ public class LoginController {
         return "login";
     }
 
-    @RequestMapping(value = "/login", method = RequestMethod.POST)
+/*    @RequestMapping(value = "/login", method = RequestMethod.POST)
     public ModelAndView login(@RequestParam(value = "login", required = true) String login,
                               @RequestParam(value = "password", required = true) String password,
                               RedirectAttributes redirectAttributes,
@@ -79,10 +79,6 @@ public class LoginController {
             mav.setViewName("login");
         }
         return mav;
-    }
-
-/*    @ModelAttribute(value = "error") ???
-    public ErrorManager addError() {
-        return error;
     }*/
+
 }

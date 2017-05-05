@@ -41,7 +41,7 @@
                     <% showError = true; %>
                 </c:if>
 
-                <form class="form" role="form" action="login" method="post">
+                <form class="form" role="form" action="${pageContext.request.contextPath}/login" method="post">
                     <h2 class="form-signin-heading">Login</h2>
                     <div class="form-group <%=showError?"has-error":"" %>">
                         <input type="email" class="form-control" placeholder="Mail" name="login" required autofocus>
