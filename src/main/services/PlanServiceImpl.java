@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -36,6 +37,21 @@ public class PlanServiceImpl implements PlanService {
     public boolean deletePlanById(Integer id) throws SQLException {
         try {
             return planDao.delete(id);
+        } catch (SQLException e) {
+            logger.warn("SQLException in PlanServiceImpl");
+            throw e;
+        }
+    }
+
+    @Override
+    public void addPlan(Date date, Integer idProduct, Integer quantity, Integer cost) throws SQLException {
+        planDao.insert(date, idProduct, quantity, cost);
+    }
+
+    @Override
+    public void updatePlan(Integer idPlan, Date date, Integer idProduct, Integer quantity, Integer cost) throws SQLException {
+        try {
+            planDao.updatePlan(idPlan, date, idProduct, quantity, cost);
         } catch (SQLException e) {
             logger.warn("SQLException in PlanServiceImpl");
             throw e;

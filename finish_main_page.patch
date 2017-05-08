@@ -1,0 +1,549 @@
+Index: src/main/controllers/MainController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/controllers/MainController.java	(revision c915a82e5143259cc4c5fef185133b98d77a84d5)
++++ src/main/controllers/MainController.java	(revision )
+@@ -1,10 +1,7 @@
+ package main.controllers;
+ 
+ import main.models.pojo.User;
+-import main.services.PlanService;
+-import main.services.PlanServiceImpl;
+-import main.services.UserService;
+-import main.services.UserServiceImpl;
++import main.services.*;
+ import main.utils.ErrorManager;
+ import main.utils.Options;
+ import org.apache.log4j.Logger;
+@@ -15,6 +12,7 @@
+ import org.springframework.web.bind.annotation.ModelAttribute;
+ import org.springframework.web.bind.annotation.RequestMapping;
+ import org.springframework.web.bind.annotation.RequestMethod;
++import org.springframework.web.bind.annotation.RequestParam;
+ import org.springframework.web.servlet.ModelAndView;
+ 
+ import javax.servlet.RequestDispatcher;
+@@ -23,6 +21,7 @@
+ import javax.servlet.http.HttpServletRequest;
+ import javax.servlet.http.HttpServletResponse;
+ import java.io.IOException;
++import java.sql.Date;
+ import java.sql.SQLException;
+ 
+ /**
+@@ -34,22 +33,29 @@
+     private static Logger logger = Logger.getLogger(MainController.class);
+     private ErrorManager error;
+     private PlanService planService;
++    private ProductService productService;
+ 
+     @Autowired
+     public void setPlanService(PlanService planService) {
+         this.planService = planService;
+     }
+ 
++    @Autowired
++    public void setProductService(ProductService productService) {
++        this.productService = productService;
++    }
++
+     @RequestMapping(value = "/main", method = RequestMethod.GET)
+-    public ModelAndView showLoginPage(Model model) throws SQLException {
++    public ModelAndView showMainPage(Model model) throws SQLException {
+         ModelAndView mav = new ModelAndView();
+ 
+         for (int replays=1; replays<=Options.REPLACE_COUNT; replays++) {
+             try {
+                 model.addAttribute("planList", planService.getAllPlans());
++                model.addAttribute("productList", productService.getAllProducts());
+                 break;
+             } catch (SQLException e) {
+-                logger.error("SQLException in LoginController.registration()");
++                logger.error("SQLException in MainController.showMainPage()");
+                 if (replays == Options.REPLACE_COUNT) {
+                     error.setMsg("Oh sorry! Site crash, try again later");
+                     mav.addObject("error", error);
+@@ -62,11 +68,64 @@
+         return mav;
+     }
+ 
+-    @RequestMapping(value = "/main-add", method = RequestMethod.POST)
+-    public ModelAndView mainAdd(Model model) {
++    @RequestMapping(value = "/mainadd", method = RequestMethod.POST)
++    public ModelAndView mainAdd(@RequestParam(value = "date", required = true) Date date,
++                                @RequestParam(value = "idProduct", required = true) Integer idProduct,
++                                @RequestParam(value = "quantity", required = true) Integer quantity,
++                                @RequestParam(value = "cost", required = true) Integer cost) {
+         ModelAndView mav = new ModelAndView();
+ 
+-        mav.setViewName("main");
++        try {
++            planService.addPlan(date, idProduct, quantity, cost);
++        } catch (SQLException e) {
++            logger.error("SQLException in MainController.mainAdd()");
++            error.setMsg("Oh sorry! Site crash, try again later");
++            mav.addObject("error", error);
++            mav.setViewName("error");
++            return mav;
++        }
++
++        mav.setViewName("redirect:main");
++        return mav;
++    }
++
++    @RequestMapping(value = "/maindel", method = RequestMethod.POST)
++    public ModelAndView mainDel(@RequestParam(value = "idPlan") Integer idPlan) {
++        logger.warn("DDDDD");
++        ModelAndView mav = new ModelAndView();
++        try {
++            planService.deletePlanById(idPlan);
++        } catch (SQLException e) {
++            logger.error("SQLException in MainController.mainDel()");
++            error.setMsg("Oh sorry! Site crash, try again later");
++            mav.addObject("error", error);
++            mav.setViewName("error");
++            return mav;
++        }
++
++        mav.setViewName("redirect:main");
++        return mav;
++    }
++
++    @RequestMapping(value = "/mainedit", method = RequestMethod.POST)
++    public ModelAndView mainEdit(@RequestParam(value = "idPlan", required = true) Integer idPlan,
++                                 @RequestParam(value = "date", required = true) Date date,
++                                 @RequestParam(value = "idProduct", required = true) Integer idProduct,
++                                 @RequestParam(value = "quantity", required = true) Integer quantity,
++                                 @RequestParam(value = "cost", required = true) Integer cost) {
++        logger.warn("DDDDD idPlan="+idPlan+" date="+date+" idProduct="+idProduct+" quantity="+quantity+" cost="+cost);
++        ModelAndView mav = new ModelAndView();
++        try {
++            planService.updatePlan(idPlan, date, idProduct, quantity, cost);
++        } catch (SQLException e) {
++            logger.error("SQLException in MainController.mainDel()");
++            error.setMsg("Oh sorry! Site crash, try again later");
++            mav.addObject("error", error);
++            mav.setViewName("error");
++            return mav;
++        }
++
++        mav.setViewName("redirect:main");
+         return mav;
+     }
+ 
+Index: src/main/webapp/main.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/main.jsp	(revision c915a82e5143259cc4c5fef185133b98d77a84d5)
++++ src/main/webapp/main.jsp	(revision )
+@@ -1,10 +1,30 @@
+ <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
++<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+ <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+ <html>
+ <head>
+     <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+     <link href="bootstrap/css/starter-template.css" rel="stylesheet">
++
++    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
++    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
++    <script src="bootstrap/js/bootstrap-select.js"></script>
++    <link rel="stylesheet" href="bootstrap/css/bootstrap-select.css">
+ </head>
++<script type="text/javascript">
++
++    function activateEditForm(idPlan, idProduct) {
++        $("#editIdPlan").val(idPlan);
++        $("#editDate").val($("#planListDate"+idPlan).text());
++        $("#editQuantity").val($("#planListQuantity"+idPlan).text());
++        $("#editCost").val($("#planListCost"+idPlan).text());
++        $("#editIdProduct").val(idProduct);
++        $(".selectpicker").selectpicker("refresh");
++
++        $("#editFormContainer").show();
++        $("#addFormContainer").hide();
++    }
++</script>
+ <body>
+ <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+     <div class="container">
+@@ -36,33 +56,35 @@
+ 
+     <div class="starter-template">
+         <div class="row">
+-            <div class="col-md-2"></div>
+             <div class="col-md-8">
++                <h2>Planning shopping</h2>
++            </div>
++        </div>
++
++        <div class="row">
++            <div class="col-md-9">
+ 
+                 <table class="table table-striped">
+                     <tr>
+-                        <th>plan_id</th>
+-                        <th>datePlan</th>
++                        <th>date</th>
++                        <th>product</th>
+                         <th>quantity</th>
+                         <th>cost</th>
+-                        <th>userId</th>
+-                        <th>productId</th>
+-                        <th></th><th></th>
++                        <th></th>
++                        <th></th>
+                     </tr>
+                     <c:forEach items="${requestScope.planList}" var="plan">
+                         <tr>
+-                            <td><c:out value="${plan.id_plan}"></c:out></td>
+-                            <td><c:out value="${plan.datePlan}"></c:out></td>
+-                            <td><c:out value="${plan.quantity}"></c:out></td>
+-                            <td><c:out value="${plan.cost}"></c:out></td>
+-                            <td><c:out value="${plan.userId}"></c:out></td>
+-                            <td><c:out value="${plan.productId}"></c:out></td>
++                            <td id="planListDate${plan.id_plan}"><c:out value="${plan.datePlan}"></c:out></td>
++                            <td><c:out value="${plan.product.name}"></c:out></td>
++                            <td id="planListQuantity${plan.id_plan}"><c:out value="${plan.quantity}"></c:out></td>
++                            <td id="planListCost${plan.id_plan}"><c:out value="${plan.cost}"></c:out></td>
+                             <td>
+-                                <a href="edit?id=<c:out value="${plan.id_plan}"></c:out>">edit</a>
++                                <a href="javascript://" onclick="activateEditForm(${plan.id_plan}, ${plan.product.idProduct}); return false;">edit</a>
+                             </td>
+                             <td>
+-                                <form method="POST" name="delete" id="deleteFormId_${plan.id_plan}">
+-                                    <input type="hidden" value="${plan.id_plan}" name="deleteId"/>
++                                <form method="POST" name="delete" action="maindel" id="deleteFormId_${plan.id_plan}">
++                                    <input type="hidden" value="${plan.id_plan}" name="idPlan"/>
+                                 </form>
+                                 <a href="javascript://" onClick="document.getElementById('deleteFormId_${plan.id_plan}').submit(); return false;">
+                                     delete
+@@ -73,7 +95,66 @@
+                 </table>
+ 
+             </div>
+-            <div class="col-md-2"></div>
++
++            <div class="col-md-3">
++                <div class="panel panel-success" id="addFormContainer">
++                    <div class="panel-heading">Add new plan</div>
++                    <div class="panel-body">
++                        <form class="form" method="post" action="mainadd">
++                            <div class="form-group">
++                                <jsp:useBean id="now" class="java.util.Date" />
++                                <fmt:formatDate var="dd" value="${now}" pattern="yyyy-MM-dd" />
++                                <input type="date" class="form-control" name="date" value="${dd}" required />
++                            </div>
++                            <div class="form-group">
++                                <select id="tokens" class="selectpicker" data-live-search="true" name="idProduct">
++                                    <c:forEach items="${requestScope.productList}" var="product">
++                                        <option data-tokens="first" value="${product.idProduct}" ><c:out value="${product.name}"></c:out></option>
++                                    </c:forEach>
++                                </select>
++                            </div>
++                            <div class="form-group">
++                                <input type="number" class="form-control" name="quantity" placeholder="quantity" min="0" max="2147483646" required />
++                            </div>
++                            <div class="form-group">
++                                <input type="number" class="form-control" name="cost" placeholder="cost" min="0" max="2147483646" required />
++                            </div>
++                            <div class="form-group">
++                                <button class="btn btn-lg btn-success btn-block" type="submit">save</button>
++                            </div>
++                        </form>
++                    </div>
++                </div>
++
++
++                <div class="panel panel-info" id="editFormContainer" style="display: none;">
++                    <div class="panel-heading">Edit new plan</div>
++                    <div class="panel-body">
++                        <form class="form" method="post" action="mainedit">
++                            <input type="hidden" value="" id="editIdPlan" name="idPlan">
++                            <div class="form-group">
++                                <input type="date" class="form-control" name="date" value="" id="editDate" required />
++                            </div>
++                            <div class="form-group">
++                                <select class="selectpicker" data-live-search="true" name="idProduct" id="editIdProduct">
++                                    <c:forEach items="${requestScope.productList}" var="product">
++                                        <option data-tokens="first" value="${product.idProduct}" ><c:out value="${product.name}"></c:out></option>
++                                    </c:forEach>
++                                </select>
++                            </div>
++                            <div class="form-group">
++                                <input type="number" class="form-control" name="quantity" placeholder="quantity" id="editQuantity" min="0" max="2147483646" required />
++                            </div>
++                            <div class="form-group">
++                                <input type="number" class="form-control" name="cost" placeholder="cost" id="editCost" min="0" max="2147483646" required />
++                            </div>
++                            <div class="form-group">
++                                <button class="btn btn-lg btn-info btn-block" type="submit">save</button>
++                            </div>
++                        </form>
++                    </div>
++                </div>
++            </div>
+         </div>
+     </div>
+ </div>
+Index: src/main/services/PlanServiceImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/services/PlanServiceImpl.java	(revision c915a82e5143259cc4c5fef185133b98d77a84d5)
++++ src/main/services/PlanServiceImpl.java	(revision )
+@@ -8,6 +8,7 @@
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.stereotype.Service;
+ 
++import java.sql.Date;
+ import java.sql.SQLException;
+ import java.util.List;
+ 
+@@ -41,4 +42,19 @@
+             throw e;
+         }
+     }
++
++    @Override
++    public void addPlan(Date date, Integer idProduct, Integer quantity, Integer cost) throws SQLException {
++        planDao.insert(date, idProduct, quantity, cost);
++    }
++
++    @Override
++    public void updatePlan(Integer idPlan, Date date, Integer idProduct, Integer quantity, Integer cost) throws SQLException {
++        try {
++            planDao.updatePlan(idPlan, date, idProduct, quantity, cost);
++        } catch (SQLException e) {
++            logger.warn("SQLException in PlanServiceImpl");
++            throw e;
++        }
++    }
+ }
+Index: src/main/models/dao/PlanDao.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/models/dao/PlanDao.java	(revision c915a82e5143259cc4c5fef185133b98d77a84d5)
++++ src/main/models/dao/PlanDao.java	(revision )
+@@ -3,6 +3,7 @@
+ import main.models.pojo.Plan;
+ import main.models.pojo.Product;
+ 
++import java.sql.Date;
+ import java.sql.SQLException;
+ import java.util.List;
+ 
+@@ -16,4 +17,6 @@
+     public boolean delete(Plan plan);
+     public boolean delete(Integer id) throws SQLException;
+     public boolean insert(Plan plan);
++    void insert(Date date, Integer idProduct, Integer quantity, Integer cost) throws SQLException;
++    void updatePlan(Integer idPlan, Date date, Integer idProduct, Integer quantity, Integer cost) throws SQLException;
+ }
+\ No newline at end of file
+Index: src/main/models/dao/PlanDaoImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/models/dao/PlanDaoImpl.java	(revision c915a82e5143259cc4c5fef185133b98d77a84d5)
++++ src/main/models/dao/PlanDaoImpl.java	(revision )
+@@ -1,6 +1,7 @@
+ package main.models.dao;
+ 
+ import main.models.pojo.Plan;
++import main.models.pojo.Product;
+ import main.models.pojo.User;
+ import org.apache.log4j.Logger;
+ 
+@@ -58,6 +59,7 @@
+             ResultSet result = preparedStatement.executeQuery();
+ 
+             List<Plan> listPlan = new ArrayList<Plan>();
++
+             while (result.next()) {
+                 listPlan.add(new Plan(
+                         result.getInt("plan_id"),
+@@ -65,9 +67,13 @@
+                         result.getInt("plan_quantity"),
+                         result.getInt("plan_cost"),
+                         result.getInt("plan_user_id"),
+-                        result.getInt("plan_product_id"))
++                        new Product(result.getInt("product_id"),
++                                result.getString("product_name"),
++                                result.getString("product_description"),
++                                result.getInt("product_user_id")))
+                 );
+             }
++
+             preparedStatement.close();
+             result.close();
+             return listPlan;
+@@ -82,7 +88,7 @@
+         Connection connection = DBConnection.initConnection();
+         try {
+             PreparedStatement preparedStatement = connection.prepareStatement("select *"+
+-                    " from plans where plan_id=?");
++                    " from plans pl left join products pr on pr.product_id = pl.plan_product_id where plan_id=?");
+             preparedStatement.setInt(1, id);
+ 
+             ResultSet result = preparedStatement.executeQuery();
+@@ -94,8 +100,10 @@
+                     result.getInt("plan_quantity"),
+                     result.getInt("plan_cost"),
+                     result.getInt("plan_user_id"),
+-                    result.getInt("plan_product_id")
+-            );
++                    new Product(result.getInt("product_id"),
++                            result.getString("product_name"),
++                            result.getString("product_description"),
++                            result.getInt("product_user_id")));
+ 
+         } catch (SQLException e) {
+             logger.warn("SQLException in Plan.get()");
+@@ -113,7 +121,7 @@
+             preparedStatement.setInt(2, plan.getQuantity());
+             preparedStatement.setInt(3, plan.getCost());
+             preparedStatement.setInt(4, plan.getUserId());
+-            preparedStatement.setInt(5, plan.getProductId());
++            preparedStatement.setInt(5, plan.getProduct().getIdProduct());
+             preparedStatement.setInt(6, plan.getId_plan());
+             preparedStatement.executeQuery();
+             return true;
+@@ -140,15 +148,15 @@
+     public boolean insert(Plan plan) {
+         Connection connection = DBConnection.initConnection();
+         try {
+-            PreparedStatement preparedStatement = connection.prepareStatement("insert plans (" +
++            PreparedStatement preparedStatement = connection.prepareStatement("insert into plans (" +
+                     " plan_id, plan_data, plan_quantity, plan_cost, plan_user_id, plan_product_id)" +
+-                    " = (?, ?, ?, ?, ?, ?)");
++                    " values (?, ?, ?, ?, ?, ?)");
+             preparedStatement.setInt(1, plan.getId_plan());
+             preparedStatement.setDate(2, (Date) plan.getDatePlan());
+             preparedStatement.setInt(3, plan.getQuantity());
+             preparedStatement.setInt(4, plan.getCost());
+             preparedStatement.setInt(5, plan.getUserId());
+-            preparedStatement.setInt(6, plan.getProductId());
++            preparedStatement.setInt(6, plan.getProduct().getIdProduct());
+             preparedStatement.executeQuery();
+             return true;
+         } catch (SQLException e) {
+@@ -156,5 +164,46 @@
+             return false;
+         }
+     }
++
++    @Override
++    public void insert(Date date, Integer idProduct, Integer quantity, Integer cost) throws SQLException {
++        Connection connection = DBConnection.getConnection();
++        try {
++            PreparedStatement preparedStatement = connection.prepareStatement("insert into plans (" +
++                    " plan_data, plan_quantity, plan_cost, plan_user_id, plan_product_id)" +
++                    " values (?, ?, ?, ?, ?) RETURNING plan_id");
++            preparedStatement.setDate(1, date);
++            preparedStatement.setInt(2, quantity);
++            preparedStatement.setInt(3, cost);
++            preparedStatement.setInt(4, 1);
++            preparedStatement.setInt(5, idProduct);
++            preparedStatement.executeQuery();
++            preparedStatement.close();
++        } catch (SQLException e) {
++            logger.warn("SQLException in Plan.insert()");
++            throw e;
++        }
++    }
++
++    @Override
++    public void updatePlan(Integer idPlan, Date date, Integer idProduct, Integer quantity, Integer cost) throws SQLException {
++        Connection connection = DBConnection.initConnection();
++        try {
++            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE plans SET(" +
++                    " plan_data, plan_quantity, plan_cost, plan_user_id, plan_product_id)" +
++                    " = (?, ?, ?, ?, ?) WHERE plan_id = ? RETURNING plan_id");
++            preparedStatement.setDate(1, date);
++            preparedStatement.setInt(2, quantity);
++            preparedStatement.setInt(3, cost);
++            preparedStatement.setInt(4, 1);
++            preparedStatement.setInt(5, idProduct);
++            preparedStatement.setInt(6, idPlan);
++            preparedStatement.executeQuery();
++            preparedStatement.close();
++        } catch (SQLException e) {
++            logger.warn("SQLException in Plan.updatePlan()");
++            throw e;
++        }
++    }
+ }
+ 
+Index: src/main/services/PlanService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/services/PlanService.java	(revision c915a82e5143259cc4c5fef185133b98d77a84d5)
++++ src/main/services/PlanService.java	(revision )
+@@ -2,6 +2,7 @@
+ 
+ import main.models.pojo.Plan;
+ 
++import java.sql.Date;
+ import java.sql.SQLException;
+ import java.util.List;
+ 
+@@ -12,4 +13,6 @@
+ 
+     public List<Plan> getAllPlans() throws SQLException;
+     public boolean deletePlanById(Integer id) throws SQLException;
++    void addPlan(Date date, Integer idProduct, Integer quantity, Integer cost) throws SQLException;
++    void updatePlan(Integer idPlan, Date date, Integer idProduct, Integer quantity, Integer cost) throws SQLException;
+ }
+Index: src/main/models/pojo/Plan.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/models/pojo/Plan.java	(revision c915a82e5143259cc4c5fef185133b98d77a84d5)
++++ src/main/models/pojo/Plan.java	(revision )
+@@ -11,15 +11,15 @@
+     private int quantity;
+     private int cost;
+     private int userId;
+-    private int productId;
++    private Product product;
+ 
+-    public Plan(Integer id_plan, Date datePlan, int quantity, int cost, int userId, int productId) {
++    public Plan(Integer id_plan, Date datePlan, int quantity, int cost, int userId, Product product) {
+         this.id_plan = id_plan;
+         this.datePlan = datePlan;
+         this.quantity = quantity;
+         this.cost = cost;
+         this.userId = userId;
+-        this.productId = productId;
++        this.product = product;
+     }
+ 
+     public Integer getId_plan() {
+@@ -62,11 +62,11 @@
+         this.userId = user;
+     }
+ 
+-    public int getProductId() {
+-        return productId;
++    public Product getProduct() {
++        return product;
+     }
+ 
+-    public void setProductId(int product_id) {
+-        this.productId = product_id;
++    public void setProduct(Product product) {
++        this.product = product;
+     }
+ }

@@ -11,15 +11,15 @@ public class Plan {
     private int quantity;
     private int cost;
     private int userId;
-    private int productId;
+    private Product product;
 
-    public Plan(Integer id_plan, Date datePlan, int quantity, int cost, int userId, int productId) {
+    public Plan(Integer id_plan, Date datePlan, int quantity, int cost, int userId, Product product) {
         this.id_plan = id_plan;
         this.datePlan = datePlan;
         this.quantity = quantity;
         this.cost = cost;
         this.userId = userId;
-        this.productId = productId;
+        this.product = product;
     }
 
     public Integer getId_plan() {
@@ -62,11 +62,11 @@ public class Plan {
         this.userId = user;
     }
 
-    public int getProductId() {
-        return productId;
+    public Product getProduct() {
+        return product;
     }
 
-    public void setProductId(int product_id) {
-        this.productId = product_id;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 }
