@@ -62,14 +62,12 @@ public class MainController {
         return mav;
     }
 
-/*
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Integer deleteId = Integer.parseInt(req.getParameter("deleteId"));
-        if (deleteId != null && deleteId > 0) {
-            planService.deletePlanById(deleteId);
-        }
-        resp.sendRedirect(req.getContextPath() + "/main");
-    }*/
+    @RequestMapping(value = "/main-add", method = RequestMethod.POST)
+    public ModelAndView mainAdd(Model model) {
+        ModelAndView mav = new ModelAndView();
+
+        mav.setViewName("main");
+        return mav;
+    }
 
 }

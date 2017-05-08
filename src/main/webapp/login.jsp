@@ -37,7 +37,7 @@
             <div class="col-md-4">
 
                 <% Boolean showError = false; %>
-                <c:if test="${not empty error.msg}">
+                <c:if test="${not empty param.error}">
                     <% showError = true; %>
                 </c:if>
 
@@ -49,11 +49,11 @@
                     <div class="form-group <%=showError?"has-error":"" %>">
                         <input type="password" class="form-control" placeholder="Password" name="password" required>
                     </div>
-                    <button class="btn btn-lg btn-primary btn-block" type="submit" name="submit">login</button>
+                    <button class="btn btn-lg btn-primary btn-block" type="submit">login</button>
                 </form>
 
-                <c:if test="${not empty error.msg}">
-                    <div class="alert alert-danger">${error.msg}</div>
+                <c:if test="${not empty param.error}">
+                    <div class="alert alert-danger">Failed login or password</div>
                 </c:if>
 
             </div>

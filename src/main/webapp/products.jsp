@@ -22,9 +22,7 @@
             <ul class="nav navbar-nav">
                 <li><a href="index">Index</a></li>
                 <li><a href="main">Main</a></li>
-                <c:if test="${user.isAdmin}">
-                    <li><a href="admin">AdminPanel</a></li>
-                </c:if>
+                <li><a href="admin">AdminPanel</a></li>
                 <li class="active"><a href="products">Products</a></li>
                 <li><a href="logout">Logout</a></li>
             </ul>

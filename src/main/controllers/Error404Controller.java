@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 /**
  * Created by admin on 27.04.2017.
  */
-@RequestMapping("/*")
+@RequestMapping("**")
 @ResponseBody
 public class Error404Controller {
 

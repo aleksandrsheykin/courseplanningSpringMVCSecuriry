@@ -13,14 +13,14 @@
         <intercept-url pattern="/products**" access="isAuthenticated()" />
         <intercept-url pattern="/admin**" access="hasRole('ROLE_ADMIN')" />
 
-        <!-- access denied page
-        <access-denied-handler error-page="/403" /> -->
+        <!--access denied page-->
+        <access-denied-handler error-page="/403" />
 
         <form-login
                 login-page="/"
                 login-processing-url="/login"
                 default-target-url="/main"
-                authentication-failure-url="/login2?error"
+                authentication-failure-url="/?error=1"
                 username-parameter="login"
                 password-parameter="password" />
         <logout logout-success-url="/login?logout"  />
