@@ -61,4 +61,9 @@ public class ProductServiceImpl implements ProductService {
             throw e;
         }
     }
+
+    @Override
+    public boolean getDelResolution(int idProduct) throws SQLException {
+        return productDao.getDelResolution(idProduct);
+    }
 }

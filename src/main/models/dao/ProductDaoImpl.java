@@ -22,7 +22,6 @@ public class ProductDaoImpl implements ProductDao {
 
     private static Logger logger = Logger.getLogger(ProductDaoImpl.class);
 
-
     public List<Product> getAll() throws SQLException {
         Connection connection = DBConnection.getConnection();
         try {
@@ -175,4 +174,28 @@ public class ProductDaoImpl implements ProductDao {
         }
     }
 
+    @Override
+    public boolean getDelResolution(Integer idProduct) throws SQLException {
+        Connection connection = DBConnection.getConnection();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("select count(*) as count"+
+                    " from plans where plan_product_id = ?");
+            preparedStatement.setInt(1, idProduct);
+
+            ResultSet result = preparedStatement.executeQuery();
+
+            Boolean r = false;
+            if (result.next()) {
+                r = result.getInt("count") > 0 ? false : true;
+            }
+
+            preparedStatement.close();
+            result.close();
+            return r;
+
+        } catch (SQLException e) {
+            logger.warn("SQLException in Product.getDelResolution() idProduct="+idProduct);
+            throw e;
+        }
+    }
 }

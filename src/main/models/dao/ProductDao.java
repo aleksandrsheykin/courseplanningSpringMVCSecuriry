@@ -18,4 +18,5 @@ public interface ProductDao {
     boolean delete(Integer id) throws SQLException;
     boolean insert(Product product);
     boolean insert(String name, String desc) throws SQLException;
+    boolean getDelResolution(Integer idProduct) throws SQLException;
 }

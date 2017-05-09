@@ -65,7 +65,8 @@ public class ProductController {
     public ModelAndView requestManager(@RequestParam(value = "action", required = true) String action,
                                        @RequestParam(value = "id", required = false) Integer id,
                                        @RequestParam(value = "name", required = false) String name,
-                                       @RequestParam(value = "description", required = false) String desc) {
+                                       @RequestParam(value = "description", required = false) String desc,
+                                       Model model) {
         ModelAndView mav = new ModelAndView();
 
         for (int replays=1; replays<=Options.REPLACE_COUNT; replays++) {
@@ -75,7 +76,15 @@ public class ProductController {
                 } else if (action.equals("edit")) {
                     productService.editProduct(id, name, desc);
                 } else if (action.equals("delete")) {
-                    productService.deleteProduct(id);
+                    if (productService.getDelResolution(id)) {
+                        productService.deleteProduct(id);
+                    } else {
+                        error.setMsg("There are plans with this product, delete them");
+                        model.addAttribute("productList", productService.getAllProducts());
+                        model.addAttribute("error", error);
+                        mav.setViewName("products");
+                        return mav;
+                    }
                 }
                 break;
             } catch (SQLException e) {

@@ -15,4 +15,5 @@ public interface ProductService {
     boolean addProduct(String name, String desc) throws SQLException;
     boolean editProduct(Integer id, String name, String desc) throws SQLException;
     boolean deleteProduct(Integer id) throws SQLException;
+    boolean getDelResolution(int idProduct) throws SQLException;
 }
