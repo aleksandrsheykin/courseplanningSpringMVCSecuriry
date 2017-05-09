@@ -83,9 +83,4 @@ public class RegistrationController {
         return mav;
     }
 
-/*    @ModelAttribute(value = "error")
-    public ErrorManager addError() {
-        return error;
-    }*/
-
 }

@@ -48,37 +48,4 @@ public class LoginController {
         return "login";
     }
 
-/*    @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public ModelAndView login(@RequestParam(value = "login", required = true) String login,
-                              @RequestParam(value = "password", required = true) String password,
-                              RedirectAttributes redirectAttributes,
-                              Model model) {
-        ModelAndView mav = new ModelAndView();
-
-        User user = null;
-        for (int replays=1; replays<=Options.REPLACE_COUNT; replays++)
-            try {
-                user = userService.auth(login, password);
-                break;
-            } catch (SQLException e) {
-                logger.error("SQLException in LoginController.registration()");
-                if (replays == Options.REPLACE_COUNT) {
-                    error.setMsg("Oh sorry! Registration error, try again later");
-                    mav.addObject("error", error);
-                    mav.setViewName("error");
-                    return mav;
-                }
-            }
-
-        if (user != null) {
-            model.addAttribute("user", user);
-            mav.setViewName("redirect:main");
-        } else {
-            error.setMsg("Failed login");
-            mav.addObject("error", error);
-            mav.setViewName("login");
-        }
-        return mav;
-    }*/
-
 }

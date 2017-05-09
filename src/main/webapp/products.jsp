@@ -81,13 +81,13 @@
                             </td>
                         </tr>
                     </c:forEach>
-                    <c:if test="${not empty error.msg}">
-                        <div class="alert alert-danger alert-dismissable">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                            ${error.msg}
-                        </div>
-                    </c:if>
                 </table>
+                <c:if test="${not empty error.msg}">
+                    <div class="alert alert-danger alert-dismissable">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            ${error.msg}
+                    </div>
+                </c:if>
 
             </div>
             <div class="col-md-4">

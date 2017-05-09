@@ -43,20 +43,7 @@ public class ProductController {
     public ModelAndView showProductPage(Model model) throws SQLException {
         ModelAndView mav = new ModelAndView();
 
-        for (int replays=1; replays<=Options.REPLACE_COUNT; replays++)
-            try {
-                model.addAttribute("productList", productService.getAllProducts());
-                break;
-            } catch (SQLException e) {
-                logger.error("SQLException in ProductController.showProductPage()");
-                if (replays == Options.REPLACE_COUNT) {
-                    error.setMsg("Oh sorry! Site crash, try again later");
-                    mav.addObject("error", error);
-                    mav.setViewName("error");
-                    return mav;
-                }
-            }
-
+        model.addAttribute("productList", productService.getAllProducts());
         mav.setViewName("products");
         return mav;
     }
@@ -66,35 +53,22 @@ public class ProductController {
                                        @RequestParam(value = "id", required = false) Integer id,
                                        @RequestParam(value = "name", required = false) String name,
                                        @RequestParam(value = "description", required = false) String desc,
-                                       Model model) {
+                                       Model model) throws SQLException {
         ModelAndView mav = new ModelAndView();
 
-        for (int replays=1; replays<=Options.REPLACE_COUNT; replays++) {
-            try {
-                if (action.equals("add")) {
-                    productService.addProduct(name, desc);
-                } else if (action.equals("edit")) {
-                    productService.editProduct(id, name, desc);
-                } else if (action.equals("delete")) {
-                    if (productService.getDelResolution(id)) {
-                        productService.deleteProduct(id);
-                    } else {
-                        error.setMsg("There are plans with this product, delete them");
-                        model.addAttribute("productList", productService.getAllProducts());
-                        model.addAttribute("error", error);
-                        mav.setViewName("products");
-                        return mav;
-                    }
-                }
-                break;
-            } catch (SQLException e) {
-                logger.error("SQLException in ProductController. Signature: name=" + name + " desc=" + desc + " action=" + action + " id=" + id);
-                if (replays == Options.REPLACE_COUNT) {
-                    error.setMsg("Oh sorry! Product adding error, try again later");
-                    mav.addObject("error", error);
-                    mav.setViewName("error");
-                    return mav;
-                }
+        if (action.equals("add")) {
+            productService.addProduct(name, desc);
+        } else if (action.equals("edit")) {
+            productService.editProduct(id, name, desc);
+        } else if (action.equals("delete")) {
+            if (productService.getDelResolution(id)) {
+                productService.deleteProduct(id);
+            } else {
+                error.setMsg("There are plans with this product, delete them");
+                model.addAttribute("productList", productService.getAllProducts());
+                model.addAttribute("error", error);
+                mav.setViewName("products");
+                return mav;
             }
         }
 
