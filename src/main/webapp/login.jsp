@@ -42,6 +42,7 @@
                 </c:if>
 
                 <form class="form" role="form" action="${pageContext.request.contextPath}/login" method="post">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
                     <h2 class="form-signin-heading">Login</h2>
                     <div class="form-group <%=showError?"has-error":"" %>">
                         <input type="email" class="form-control" placeholder="Mail" name="login" required autofocus>
